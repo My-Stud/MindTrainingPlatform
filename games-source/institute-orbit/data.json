@@ -1,0 +1,62 @@
+[
+  {
+    "institute": "Indian Lac Research Institute",
+    "location": "Jharkhand",
+    "mnemonic": "Jharna (Waterfall) and Khand (break)"
+  },
+  {
+    "institute": "INDIAN SPACE RESEARCH ORGANIZATION",
+    "location": "THUMBA (KERALA)",
+    "mnemonic": "THUMB:Thumb, KARELA"
+  },
+  {
+    "institute": "INDIAN TEXTILE INSTITUTE",
+    "location": "KANPUR",
+    "mnemonic": "KAAN :EAR"
+  },
+  {
+    "institute": "INDIAN VETERINARY INSTITUTE",
+    "location": "IZZATNAGAR",
+    "mnemonic": "IZZAT"
+  },
+  {
+    "institute": "Indian Dairy Research Institute",
+    "location": "Bengaluru",
+    "mnemonic": "Bank Me Lorry"
+  },
+  {
+    "institute": "National Aeronautical Laboratory",
+    "location": "Bengaluru",
+    "mnemonic": "Bank Me Lorry"
+  },
+  {
+    "institute": "National Biological Laboratory",
+    "location": "Palampur",
+    "mnemonic": "Pila Colour"
+  },
+  {
+    "institute": "National Chemical Laboratory",
+    "location": "CSIR, PUNE",
+    "mnemonic": "Poonam"
+  },
+  {
+    "institute": "National Environment Engineering Research Institute",
+    "location": "Nagpur",
+    "mnemonic": "Nag"
+  },
+  {
+    "institute": "National Geophysical Research Institute",
+    "location": "HYDERABAD",
+    "mnemonic": "Hi"
+  },
+  {
+    "institute": "National Institute of Oceanography",
+    "location": "Panaji",
+    "mnemonic": "Paan"
+  },
+  {
+    "institute": "National Metallurgical Laboratory",
+    "location": "Jamshedpur",
+    "mnemonic": "Jam"
+  }
+]

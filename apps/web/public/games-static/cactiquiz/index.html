@@ -1,0 +1,47 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <script>
+      const __originalFetch = window.fetch;
+      window.fetch = async function() {
+        let url = arguments[0];
+        if (typeof url === 'string' && url.includes('/quiz') && url.includes('projects')) {
+            const api = new URLSearchParams(window.location.search).get("api");
+            const slug = new URLSearchParams(window.location.search).get("slug");
+            if (api && slug) {
+                arguments[0] = api.replace(/\/+$/, '') + "/api/public/projects/" + slug + "/quiz";
+            }
+        }
+        
+        const response = await __originalFetch.apply(this, arguments);
+        const clone = response.clone();
+        
+        response.json = async function() {
+            const data = await clone.json();
+            if (data && data.data && Array.isArray(data.data)) {
+                data.data.forEach(q => {
+                    if (Array.isArray(q.options)) q.options.sort(() => Math.random() - 0.5);
+                });
+            } else if (Array.isArray(data)) {
+                data.forEach(q => {
+                    if (Array.isArray(q.options)) q.options.sort(() => Math.random() - 0.5);
+                });
+            }
+            return data;
+        };
+        return response;
+      };
+    </script>
+    
+
+    <meta charset="UTF-8" />
+    <link rel="icon" type="image/svg+xml" href="./favicon.svg" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>CactiQuiz 3D</title>
+    <script type="module" crossorigin src="./assets/index-DvVfx9uO.js"></script>
+    <link rel="stylesheet" crossorigin href="./assets/index-zxeFguf-.css">
+  </head>
+  <body>
+    <div id="root"></div>
+  </body>
+</html>

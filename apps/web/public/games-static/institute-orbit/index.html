@@ -1,0 +1,50 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <script>
+      const __originalFetch = window.fetch;
+      window.fetch = async function() {
+        let url = arguments[0];
+        if (typeof url === 'string' && url.includes('/quiz') && url.includes('projects')) {
+            const api = new URLSearchParams(window.location.search).get("api");
+            const slug = new URLSearchParams(window.location.search).get("slug");
+            if (api && slug) {
+                arguments[0] = api.replace(/\/+$/, '') + "/api/public/projects/" + slug + "/quiz";
+            }
+        }
+        
+        const response = await __originalFetch.apply(this, arguments);
+        const clone = response.clone();
+        
+        response.json = async function() {
+            const data = await clone.json();
+            if (data && data.data && Array.isArray(data.data)) {
+                data.data.forEach(q => {
+                    if (Array.isArray(q.options)) q.options.sort(() => Math.random() - 0.5);
+                });
+            } else if (Array.isArray(data)) {
+                data.forEach(q => {
+                    if (Array.isArray(q.options)) q.options.sort(() => Math.random() - 0.5);
+                });
+            }
+            return data;
+        };
+        return response;
+      };
+    </script>
+    
+
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Institute Orbit</title>
+    <link rel="icon" type="image/png" href="./assets/logo-2t2Q_PEa.png">
+    <meta name="description" content="Fun educational game - shoot the correct state capital!">
+    <link href="https://fonts.googleapis.com/css2?family=Bangers&family=Inter:wght@400;600;700;800&display=swap" rel="stylesheet">
+    <script src="https://cdn.jsdelivr.net/npm/canvas-confetti@1.6.0/dist/confetti.browser.min.js"></script>
+  <script type="module" crossorigin src="./assets/index-UpeUkVsP.js"></script>
+  <link rel="stylesheet" crossorigin href="./assets/index-BIcUVD_7.css">
+</head>
+<body>
+    <div id="root"></div>
+</body>
+</html>

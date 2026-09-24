@@ -1,0 +1,176 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <title>Room Coordinate Picker</title>
+  <style>
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+    body { background: #1a1a2e; color: #fff; font-family: 'Segoe UI', sans-serif; padding: 20px; }
+    h1 { text-align: center; margin-bottom: 10px; color: #FF6B9D; }
+    p.info { text-align: center; color: #aaa; margin-bottom: 20px; }
+    .container { display: flex; gap: 20px; justify-content: center; align-items: flex-start; flex-wrap: wrap; }
+    .image-wrap { position: relative; display: inline-block; cursor: crosshair; border: 3px solid #C084FC; border-radius: 12px; overflow: hidden; }
+    .image-wrap img { display: block; max-width: 700px; width: 100%; }
+    .marker { position: absolute; width: 30px; height: 30px; border-radius: 50%; border: 3px solid #FBBF24; background: rgba(251,191,36,0.3); transform: translate(-50%, -50%); pointer-events: none; display: flex; align-items: center; justify-content: center; font-size: 14px; }
+    .crosshair { position: absolute; pointer-events: none; }
+    .crosshair-h { width: 100%; height: 1px; background: rgba(255,107,157,0.5); position: absolute; left: 0; }
+    .crosshair-v { height: 100%; width: 1px; background: rgba(255,107,157,0.5); position: absolute; top: 0; }
+    .coords { position: absolute; background: rgba(0,0,0,0.8); color: #FBBF24; padding: 4px 8px; border-radius: 6px; font-size: 12px; font-weight: bold; pointer-events: none; white-space: nowrap; }
+    .panel { background: rgba(255,255,255,0.05); border: 1px solid rgba(255,255,255,0.1); border-radius: 12px; padding: 20px; min-width: 300px; }
+    .panel h2 { color: #C084FC; margin-bottom: 15px; }
+    .item-row { display: flex; align-items: center; gap: 10px; padding: 10px; border-radius: 8px; margin-bottom: 8px; background: rgba(255,255,255,0.03); border: 1px solid rgba(255,255,255,0.08); cursor: pointer; }
+    .item-row:hover { background: rgba(255,255,255,0.08); }
+    .item-row.active { border-color: #FBBF24; background: rgba(251,191,36,0.1); }
+    .item-row.set { border-color: #4ADE80; }
+    .emoji { font-size: 24px; }
+    .name { font-weight: bold; font-size: 16px; }
+    .coord-display { font-size: 12px; color: #60A5FA; margin-top: 2px; }
+    .output { margin-top: 20px; background: #0d1117; padding: 15px; border-radius: 8px; font-family: monospace; font-size: 13px; white-space: pre; overflow-x: auto; color: #4ADE80; border: 1px solid rgba(74,222,128,0.2); max-width: 700px; }
+    .btn { padding: 10px 20px; border: none; border-radius: 8px; cursor: pointer; font-weight: bold; font-size: 14px; }
+    .btn-copy { background: #4ADE80; color: #000; margin-top: 10px; }
+    .instructions { background: rgba(96,165,250,0.1); border: 1px solid rgba(96,165,250,0.2); border-radius: 8px; padding: 12px; margin-bottom: 15px; font-size: 13px; color: #60A5FA; }
+  </style>
+</head>
+<body>
+  <h1>🎯 Room Coordinate Picker</h1>
+  <p class="info">Click an item below, then click on the room image where that object is located.</p>
+
+  <div class="container">
+    <div class="image-wrap" id="imageWrap">
+      <img src="./room.png" id="roomImg" draggable="false" />
+      <div class="crosshair-h crosshair" id="crossH"></div>
+      <div class="crosshair-v crosshair" id="crossV"></div>
+      <div class="coords" id="coordsLabel" style="display:none"></div>
+    </div>
+
+    <div class="panel">
+      <div class="instructions">
+        📌 <strong>Steps:</strong><br>
+        1. Click an item name on the right<br>
+        2. Click where it is on the room image<br>
+        3. Repeat for all 5 items<br>
+        4. Copy the coordinates code below
+      </div>
+
+      <h2>🧸 Items to Place</h2>
+      <div id="itemList"></div>
+
+      <div class="output" id="output"></div>
+      <button class="btn btn-copy" id="copyBtn" onclick="copyOutput()">📋 Copy Coordinates</button>
+    </div>
+  </div>
+
+  <script>
+    const items = [
+      { id: 1, name: 'Book', emoji: '📕', x: null, y: null },
+      { id: 2, name: 'Pen', emoji: '🖊️', x: null, y: null },
+      { id: 3, name: 'Football', emoji: '⚽', x: null, y: null },
+      { id: 4, name: 'Bottle', emoji: '🍼', x: null, y: null },
+      { id: 5, name: 'Mickey Mouse', emoji: '🐭', x: null, y: null },
+    ];
+
+    let activeItem = null;
+    const markers = {};
+
+    const imageWrap = document.getElementById('imageWrap');
+    const roomImg = document.getElementById('roomImg');
+    const crossH = document.getElementById('crossH');
+    const crossV = document.getElementById('crossV');
+    const coordsLabel = document.getElementById('coordsLabel');
+    const itemListEl = document.getElementById('itemList');
+    const outputEl = document.getElementById('output');
+
+    // Render item list
+    function renderItems() {
+      itemListEl.innerHTML = '';
+      items.forEach((item, idx) => {
+        const row = document.createElement('div');
+        row.className = 'item-row' + (activeItem === idx ? ' active' : '') + (item.x !== null ? ' set' : '');
+        row.innerHTML = `
+          <span class="emoji">${item.emoji}</span>
+          <div>
+            <div class="name">${item.id}. ${item.name}</div>
+            <div class="coord-display">${item.x !== null ? `x: ${item.x.toFixed(1)}%, y: ${item.y.toFixed(1)}%` : 'Click to set position...'}</div>
+          </div>
+        `;
+        row.onclick = () => { activeItem = idx; renderItems(); };
+        itemListEl.appendChild(row);
+      });
+      updateOutput();
+    }
+
+    // Mouse move on image
+    imageWrap.addEventListener('mousemove', (e) => {
+      const rect = roomImg.getBoundingClientRect();
+      const x = e.clientX - rect.left;
+      const y = e.clientY - rect.top;
+      crossH.style.top = y + 'px';
+      crossV.style.left = x + 'px';
+      crossH.style.display = 'block';
+      crossV.style.display = 'block';
+
+      const pctX = (x / rect.width) * 100;
+      const pctY = (y / rect.height) * 100;
+      coordsLabel.style.display = 'block';
+      coordsLabel.style.left = (x + 15) + 'px';
+      coordsLabel.style.top = (y - 25) + 'px';
+      coordsLabel.textContent = `x: ${pctX.toFixed(1)}%, y: ${pctY.toFixed(1)}%`;
+    });
+
+    imageWrap.addEventListener('mouseleave', () => {
+      crossH.style.display = 'none';
+      crossV.style.display = 'none';
+      coordsLabel.style.display = 'none';
+    });
+
+    // Click on image
+    imageWrap.addEventListener('click', (e) => {
+      if (activeItem === null) return;
+
+      const rect = roomImg.getBoundingClientRect();
+      const x = e.clientX - rect.left;
+      const y = e.clientY - rect.top;
+      const pctX = (x / rect.width) * 100;
+      const pctY = (y / rect.height) * 100;
+
+      items[activeItem].x = pctX;
+      items[activeItem].y = pctY;
+
+      // Add/update marker
+      let marker = markers[activeItem];
+      if (!marker) {
+        marker = document.createElement('div');
+        marker.className = 'marker';
+        imageWrap.appendChild(marker);
+        markers[activeItem] = marker;
+      }
+      marker.style.left = pctX + '%';
+      marker.style.top = pctY + '%';
+      marker.textContent = items[activeItem].emoji;
+
+      // Move to next unset item
+      const nextUnset = items.findIndex((it, i) => i > activeItem && it.x === null);
+      activeItem = nextUnset !== -1 ? nextUnset : activeItem;
+
+      renderItems();
+    });
+
+    function updateOutput() {
+      const lines = items.map(item => {
+        const x = item.x !== null ? item.x.toFixed(1) : '??';
+        const y = item.y !== null ? item.y.toFixed(1) : '??';
+        return `  { id: ${item.id}, name: '${item.name}', emoji: '${item.emoji}', targetX: ${x}, targetY: ${y} }`;
+      });
+      outputEl.textContent = 'ITEMS coordinates:\n' + lines.join(',\n');
+    }
+
+    function copyOutput() {
+      navigator.clipboard.writeText(outputEl.textContent);
+      document.getElementById('copyBtn').textContent = '✅ Copied!';
+      setTimeout(() => { document.getElementById('copyBtn').textContent = '📋 Copy Coordinates'; }, 2000);
+    }
+
+    renderItems();
+  </script>
+</body>
+</html>

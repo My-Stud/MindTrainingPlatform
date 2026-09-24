@@ -1,0 +1,355 @@
+import { useState, useRef, useEffect, useCallback, useMemo } from 'react'
+import * as THREE from 'three'
+import { Canvas } from '@react-three/fiber'
+import { useGameState, useGameDispatch } from '@/game/GameContextCore'
+import { inputManager } from '@/controls/InputManager'
+import { audioManager } from '@/audio/AudioManager'
+import { PlayerHelicopter, type PlayerHelicopterHandle } from '@/game/entities/PlayerHelicopter'
+import { EnemyHelicopter } from '@/game/entities/EnemyHelicopter'
+import { Bomb } from '@/game/entities/Bomb'
+import { Explosion } from '@/game/entities/Explosion'
+import { TrajectoryLine } from '@/game/entities/TrajectoryLine'
+import { Lighting } from './Lighting'
+import { Environment } from './Environment'
+import { Terrain } from './Terrain'
+import { Clouds } from './Clouds'
+import { SpeedLines } from './SpeedLines'
+import { CameraRig } from './CameraRig'
+import type { BombPhase, HelicopterOption } from '@/game/gameTypes'
+
+// 4 enemy helicopters lined up in tactical chase convoy formation
+const BASE_SPAWN_POSITIONS = [
+  new THREE.Vector3(-19, 16.5, -26),
+  new THREE.Vector3(-6.5, 16.5, -26),
+  new THREE.Vector3(6.5, 16.5, -26),
+  new THREE.Vector3(19, 16.5, -26),
+  new THREE.Vector3(-31.5, 16.5, -26),
+  new THREE.Vector3(31.5, 16.5, -26),
+  new THREE.Vector3(-44, 16.5, -26),
+  new THREE.Vector3(44, 16.5, -26),
+]
+
+const BOMB_SPAWN_OFFSET = new THREE.Vector3(0, -0.5, -1.0)
+const DEFAULT_HIT_POS = new THREE.Vector3(0, 16.5, -26)
+const MISS_POS = new THREE.Vector3(0, 2, -26)
+
+interface BombState {
+  id: string
+  spawnPosition: THREE.Vector3
+  targetPosition: THREE.Vector3
+  targetOption: HelicopterOption | null
+  sessionId: string
+  phase: BombPhase
+}
+
+interface ExplosionState {
+  id: string
+  position: THREE.Vector3
+  type: 'correct' | 'wrong' | 'miss'
+}
+
+export function GameScene() {
+  const state = useGameState()
+  const dispatch = useGameDispatch()
+  const playerRef = useRef<PlayerHelicopterHandle>(null)
+
+  const [bomb, setBomb] = useState<BombState | null>(null)
+  const [explosion, setExplosion] = useState<ExplosionState | null>(null)
+  const [crashedHelicopters, setCrashedHelicopters] = useState<Set<number>>(new Set())
+  const [shake, setShake] = useState(false)
+  const [bombPosition, setBombPosition] = useState<THREE.Vector3 | null>(null)
+  const [impactPosition, setImpactPosition] = useState<THREE.Vector3 | null>(null)
+  const [playerPositionState, setPlayerPositionState] = useState<THREE.Vector3>(() => new THREE.Vector3(0, 20, 0))
+
+  const spawnPositions = useMemo(() => BASE_SPAWN_POSITIONS, [])
+
+  const isPaused =
+    (state.phase !== 'playing' && state.phase !== 'bombing') ||
+    state.confirmPending !== null ||
+    state.hintConfirmVisible ||
+    state.hintVisible
+
+  const isPlaying = state.phase === 'playing' && !isPaused
+
+  // Attach input manager & audio
+  useEffect(() => {
+    inputManager.attach()
+    audioManager.init()
+    return () => {
+      inputManager.detach()
+      audioManager.stop('rotorLoop')
+    }
+  }, [])
+
+  // Sync rotor audio with pause state
+  useEffect(() => {
+    if (isPaused) {
+      audioManager.stop('rotorLoop')
+    } else {
+      audioManager.play('rotorLoop')
+    }
+  }, [isPaused])
+
+  useEffect(() => {
+    inputManager.setPaused(isPaused)
+  }, [isPaused])
+
+  useEffect(() => {
+    audioManager.setMuted(state.muted)
+  }, [state.muted])
+
+  // Track player position outside render loop
+  useEffect(() => {
+    if (!isPlaying) return
+    let animId: number
+    const tempPos = new THREE.Vector3()
+
+    const updatePlayerPos = () => {
+      if (playerRef.current) {
+        playerRef.current.getWorldPosition(tempPos)
+        setPlayerPositionState((prev) => {
+          if (prev.distanceToSquared(tempPos) > 0.05) {
+            return tempPos.clone()
+          }
+          return prev
+        })
+      }
+      animId = requestAnimationFrame(updatePlayerPos)
+    }
+
+    animId = requestAnimationFrame(updatePlayerPos)
+    return () => cancelAnimationFrame(animId)
+  }, [isPlaying])
+
+  // Adjust state during render when question session changes (standard React pattern)
+  const [prevSessionId, setPrevSessionId] = useState(state.questionSessionId)
+  if (state.questionSessionId !== prevSessionId) {
+    setPrevSessionId(state.questionSessionId)
+    setCrashedHelicopters(new Set())
+    setBomb(null)
+    setBombPosition(null)
+    setImpactPosition(null)
+    setExplosion(null)
+  }
+
+  // Poll fire / controls
+  useEffect(() => {
+    if (!isPlaying) return
+    let rafId: number
+    const tempSpawn = new THREE.Vector3()
+
+    const poll = () => {
+      // Direct number key target selection (1/2/3/4)
+      const directIdx = inputManager.consumeDirectSelect()
+      if (directIdx !== null && directIdx >= 0 && directIdx < BASE_SPAWN_POSITIONS.length) {
+        // Direct target selected
+      }
+
+      if (inputManager.consumeFire() && !bomb) {
+        const player = playerRef.current
+        if (player) {
+          player.getWorldPosition(tempSpawn)
+
+          // Target lock calculation
+          const rawAimX = -inputManager.aimX * 22
+          let closestIdx = 0
+          let minDiff = 999
+          BASE_SPAWN_POSITIONS.forEach((p, idx) => {
+            const diff = Math.abs(rawAimX - p.x)
+            if (diff < minDiff) {
+              minDiff = diff
+              closestIdx = idx
+            }
+          })
+
+          const targetStation = BASE_SPAWN_POSITIONS[closestIdx]
+          const spawnPos = tempSpawn.clone().add(BOMB_SPAWN_OFFSET)
+
+          setBomb({
+            id: crypto.randomUUID(),
+            spawnPosition: spawnPos,
+            targetPosition: targetStation.clone(),
+            targetOption: state.currentOptions[closestIdx] ?? null,
+            sessionId: state.questionSessionId,
+            phase: 'flying',
+          })
+          dispatch({ type: 'BOMB_DROPPED' })
+          audioManager.play('bombDrop')
+        }
+      }
+
+      if (inputManager.consumePause()) {
+        if (state.phase === 'playing' || state.phase === 'bombing') {
+          dispatch({ type: 'PAUSE' })
+        }
+      }
+
+      if (inputManager.consumeHint()) {
+        dispatch({ type: 'SHOW_HINT_CONFIRM' })
+      }
+
+      if (inputManager.consumeMute()) {
+        dispatch({ type: 'TOGGLE_MUTE' })
+      }
+
+      rafId = requestAnimationFrame(poll)
+    }
+
+    rafId = requestAnimationFrame(poll)
+    return () => cancelAnimationFrame(rafId)
+  }, [isPlaying, bomb, dispatch, state.questionSessionId, state.phase, state.currentOptions])
+
+  const handleHit = useCallback(
+    (optionText: string, isCorrect: boolean, sessionId: string) => {
+      if (sessionId !== state.questionSessionId) return
+      const result = isCorrect ? 'correct' : 'wrong'
+
+      const hitIdx = state.currentOptions.findIndex((o) => o.optionText === optionText)
+      const hitPos =
+        hitIdx >= 0 && BASE_SPAWN_POSITIONS[hitIdx]
+          ? BASE_SPAWN_POSITIONS[hitIdx].clone()
+          : DEFAULT_HIT_POS.clone()
+
+      setExplosion({ id: crypto.randomUUID(), position: hitPos, type: result })
+      setImpactPosition(hitPos)
+      setShake(true)
+      setBomb(null)
+      setTimeout(() => setShake(false), 600)
+
+      if (hitIdx >= 0) {
+        setCrashedHelicopters((prev) => new Set([...prev, hitIdx]))
+      }
+
+      audioManager.play('explosion')
+      setTimeout(() => {
+        if (isCorrect) {
+          if (state.streak >= 2) {
+            audioManager.play('streakCombo')
+          } else {
+            audioManager.play('correct')
+          }
+        } else {
+          audioManager.play('wrong')
+        }
+      }, 250)
+
+      dispatch({ type: 'QUESTION_RESOLVED', result, sessionId })
+    },
+    [dispatch, state.questionSessionId, state.currentOptions, state.streak]
+  )
+
+  const handleMiss = useCallback(
+    (sessionId: string) => {
+      if (sessionId !== state.questionSessionId) return
+      const missPos = MISS_POS.clone()
+
+      setExplosion({ id: crypto.randomUUID(), position: missPos, type: 'miss' })
+      setImpactPosition(missPos)
+      setShake(true)
+      setBomb(null)
+      setTimeout(() => setShake(false), 400)
+
+      audioManager.play('explosion')
+      setTimeout(() => audioManager.play('wrong'), 250)
+
+      dispatch({ type: 'QUESTION_RESOLVED', result: 'miss', sessionId })
+    },
+    [dispatch, state.questionSessionId]
+  )
+
+  const handleBombPhaseChange = useCallback((phase: BombPhase) => {
+    setBomb((prev) => (prev ? { ...prev, phase } : null))
+  }, [])
+
+  const handleTargetSelected = useCallback((index: number) => {
+    inputManager.setDirectTargetIndex(index)
+  }, [])
+
+  const currentQuestion = state.questions[state.currentQuestionIndex]
+  const showTrajectory = isPlaying && !bomb
+
+  return (
+    <div id="game-canvas" className={shake ? 'screen-shake' : ''}>
+      <Canvas
+        shadows={{ type: THREE.PCFShadowMap }}
+        camera={{ fov: 54, near: 0.5, far: 400, position: [0, 19, 15] }}
+        gl={{
+          antialias: true,
+          powerPreference: 'high-performance',
+          toneMapping: THREE.ACESFilmicToneMapping,
+          toneMappingExposure: 1.18,
+        }}
+        dpr={[1, Math.min(typeof window !== 'undefined' ? window.devicePixelRatio : 1, 2.0)]}
+      >
+        <Lighting />
+        <Environment />
+        <Terrain paused={isPaused} />
+        <Clouds paused={isPaused} />
+        <SpeedLines paused={isPaused} />
+
+        {/* Player helicopter */}
+        <PlayerHelicopter ref={playerRef} paused={isPaused} />
+
+        {/* Camera rig */}
+        <CameraRig
+          playerRef={playerRef}
+          bombPosition={bombPosition}
+          impactPosition={impactPosition}
+          shake={shake}
+          paused={isPaused}
+        />
+
+        {/* 4 Front Enemy Helicopters */}
+        {currentQuestion &&
+          state.currentOptions.map((option, i) => (
+            <EnemyHelicopter
+              key={`${state.questionSessionId}-${i}`}
+              optionIndex={option.optionIndex}
+              optionText={option.optionText}
+              isCorrect={option.isCorrect}
+              sessionId={state.questionSessionId}
+              paused={isPaused}
+              spawnPosition={spawnPositions[i]}
+              crashed={crashedHelicopters.has(i)}
+              onTargetSelected={handleTargetSelected}
+              onCollisionEnter={handleHit}
+            />
+          ))}
+
+        {/* Active Deterministic Ballistic Bomb */}
+        {bomb && bomb.phase === 'flying' && (
+          <Bomb
+            key={bomb.id}
+            spawnPosition={bomb.spawnPosition}
+            targetPosition={bomb.targetPosition}
+            targetOption={bomb.targetOption}
+            sessionId={bomb.sessionId}
+            onHit={handleHit}
+            onMiss={handleMiss}
+            paused={isPaused}
+            phase={bomb.phase}
+            onPhaseChange={handleBombPhaseChange}
+          />
+        )}
+
+        {/* Trajectory preview line */}
+        {showTrajectory && (
+          <TrajectoryLine
+            playerPosition={playerPositionState}
+            visible={showTrajectory}
+          />
+        )}
+
+        {/* Explosion effect */}
+        {explosion && (
+          <Explosion
+            key={explosion.id}
+            position={explosion.position}
+            type={explosion.type}
+            onComplete={() => setExplosion(null)}
+          />
+        )}
+      </Canvas>
+    </div>
+  )
+}

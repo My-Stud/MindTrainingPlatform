@@ -1,0 +1,365 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <script>
+      const __originalFetch = window.fetch;
+      window.fetch = async function() {
+        let url = arguments[0];
+        if (typeof url === 'string' && url.includes('/quiz') && url.includes('projects')) {
+            const api = new URLSearchParams(window.location.search).get("api");
+            const slug = new URLSearchParams(window.location.search).get("slug");
+            if (api && slug) {
+                arguments[0] = api.replace(/\/+$/, '') + "/api/public/projects/" + slug + "/quiz";
+            }
+        }
+        
+        const response = await __originalFetch.apply(this, arguments);
+        const clone = response.clone();
+        
+        response.json = async function() {
+            const data = await clone.json();
+            if (data && data.data && Array.isArray(data.data)) {
+                data.data.forEach(q => {
+                    if (Array.isArray(q.options)) q.options.sort(() => Math.random() - 0.5);
+                });
+            } else if (Array.isArray(data)) {
+                data.forEach(q => {
+                    if (Array.isArray(q.options)) q.options.sort(() => Math.random() - 0.5);
+                });
+            }
+            return data;
+        };
+        return response;
+      };
+    </script>
+    
+
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
+    <title>Mystery Pointer Quiz</title>
+    <link rel="stylesheet" href="styles.css">
+    <link rel="stylesheet" href="mascot.css">
+    <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@400;700;900&family=Exo+2:wght@300;400;600;700&family=Fredoka+One&display=swap" rel="stylesheet">
+</head>
+<body>
+    <!-- Custom Pointer (always visible, outside all screens) -->
+    <div class="custom-pointer" id="custom-pointer">
+        <div class="pointer-outer"></div>
+        <div class="pointer-ring"></div>
+        <div class="pointer-center"></div>
+        <div class="pointer-crosshair-h"></div>
+        <div class="pointer-crosshair-v"></div>
+    </div>
+
+    <!-- Menu Spotlight Overlay -->
+    <div class="menu-spotlight" id="menu-spotlight"></div>
+
+    <!-- Main Menu Screen -->
+    <div id="menu-screen" class="screen active">
+        <div class="menu-container">
+            <div class="logo-container">
+                <div class="logo-icon">
+                    <div class="logo-circle"></div>
+                    <div class="logo-beam"></div>
+                </div>
+                <h1 class="game-title">MYSTERY POINTER</h1>
+                <p class="game-subtitle">QUIZ EXPLORER</p>
+            </div>
+            <div class="menu-buttons">
+                <button class="menu-btn primary-btn" id="play-btn">
+                    <span class="btn-icon">▶</span>
+                    <span class="btn-text">PLAY</span>
+                </button>
+                <button class="menu-btn" id="levels-btn">
+                    <span class="btn-icon">◆</span>
+                    <span class="btn-text">LEVELS</span>
+                </button>
+                <button class="menu-btn" id="how-to-play-btn">
+                    <span class="btn-icon">?</span>
+                    <span class="btn-text">HOW TO PLAY</span>
+                </button>
+            </div>
+            <div class="menu-footer">
+                <div class="coin-display">
+                    <span class="coin-icon">●</span>
+                    <span class="coin-count" id="menu-coins">0</span>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Level Select Screen -->
+    <div id="level-screen" class="screen">
+        <div class="screen-header">
+            <button class="icon-btn back-btn" id="level-back-btn">←</button>
+            <h2 class="screen-title">SELECT LEVEL</h2>
+        </div>
+        <div class="levels-grid" id="levels-grid">
+            <!-- Levels populated by JS -->
+        </div>
+    </div>
+
+    <!-- How to Play Screen -->
+    <div id="howto-screen" class="screen">
+        <div class="screen-header">
+            <button class="icon-btn back-btn" id="howto-back-btn">←</button>
+            <h2 class="screen-title">HOW TO PLAY</h2>
+        </div>
+        <div class="howto-content">
+            <div class="howto-step">
+                <div class="step-icon">🔍</div>
+                <div class="step-text">
+                    <h3>Explore the Darkness</h3>
+                    <p>Move your flashlight pointer around the dark room to discover hidden answers.</p>
+                </div>
+            </div>
+            <div class="howto-step">
+                <div class="step-icon">💡</div>
+                <div class="step-text">
+                    <h3>Illuminate Answers</h3>
+                    <p>When the spotlight reveals an answer option, it will glow and become readable.</p>
+                </div>
+            </div>
+            <div class="howto-step">
+                <div class="step-icon">✅</div>
+                <div class="step-text">
+                    <h3>Select Your Answer</h3>
+                    <p>Click or tap on the illuminated answer you think is correct!</p>
+                </div>
+            </div>
+            <div class="howto-step">
+                <div class="step-icon">⭐</div>
+                <div class="step-text">
+                    <h3>Earn Coins</h3>
+                    <p>Get +10 coins for every correct answer. Build your score!</p>
+                </div>
+            </div>
+            <div class="howto-controls">
+                <h3>Controls</h3>
+                <p><strong>Desktop:</strong> Move mouse to control flashlight, click to select</p>
+                <p><strong>Mobile:</strong> Drag finger to move flashlight, tap to select</p>
+            </div>
+        </div>
+    </div>
+
+    <!-- Game Screen -->
+    <div id="game-screen" class="screen">
+        <!-- Dark Room Background -->
+        <div class="dark-room" id="dark-room">
+            <!-- Subtle room details -->
+            <div class="room-detail detail-1"></div>
+            <div class="room-detail detail-2"></div>
+            <div class="room-detail detail-3"></div>
+            <div class="room-detail detail-4"></div>
+            
+            <!-- Spotlight layer -->
+            <div class="spotlight-layer" id="spotlight-layer"></div>
+            
+            <!-- Answer Options -->
+            <div class="answer-option" id="answer-0" data-index="0">
+                <span class="answer-text"></span>
+            </div>
+            <div class="answer-option" id="answer-1" data-index="1">
+                <span class="answer-text"></span>
+            </div>
+            <div class="answer-option" id="answer-2" data-index="2">
+                <span class="answer-text"></span>
+            </div>
+            <div class="answer-option" id="answer-3" data-index="3">
+                <span class="answer-text"></span>
+            </div>
+        </div>
+
+        <!-- Game UI Overlay -->
+        <div class="game-ui">
+            <!-- Top Bar -->
+            <div class="top-bar">
+                <button class="icon-btn menu-game-btn" id="pause-btn">❚❚</button>
+                <div class="question-info">
+                    <span class="question-counter" id="question-counter">QUESTION 1 / 10</span>
+                </div>
+                <div class="stats-display">
+                    <div class="stat-item">
+                        <span class="stat-icon coin-icon">●</span>
+                        <span class="stat-value" id="game-coins">0</span>
+                    </div>
+                    <div class="stat-item">
+                        <span class="stat-icon score-icon">★</span>
+                        <span class="stat-value" id="game-score">0</span>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Question Display -->
+            <div class="question-container" id="question-container">
+                <p class="question-text" id="question-text">Loading question...</p>
+                <div class="hint-inline" id="hint-inline">
+                    <span class="hint-icon">💡</span>
+                    <span class="hint-label-inline">HINT:</span>
+                    <span class="hint-mnemonic" id="hint-mnemonic"></span>
+                </div>
+            </div>
+
+            <!-- Progress Bar -->
+            <div class="progress-container">
+                <div class="progress-bar" id="progress-bar"></div>
+            </div>
+
+            <!-- Hint Button -->
+            <div class="hint-container">
+                <button class="hint-btn" id="hint-btn">
+                    <span>💡</span>
+                    <span>HINT</span>
+                </button>
+            </div>
+        </div>
+
+        <!-- Feedback Overlay -->
+        <div class="feedback-overlay" id="feedback-overlay">
+            <div class="feedback-content" id="feedback-content">
+                <span class="feedback-text">CORRECT!</span>
+                <span class="feedback-bonus">+10 Coins</span>
+            </div>
+        </div>
+
+        <!-- Pause Menu -->
+        <div class="pause-menu" id="pause-menu">
+            <div class="pause-content">
+                <h2>PAUSED</h2>
+                <button class="menu-btn" id="resume-btn">
+                    <span class="btn-icon">▶</span>
+                    <span class="btn-text">RESUME</span>
+                </button>
+                <button class="menu-btn" id="quit-btn">
+                    <span class="btn-icon">✕</span>
+                    <span class="btn-text">QUIT</span>
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Results Screen -->
+    <div id="results-screen" class="screen">
+        <div class="results-container">
+            <div class="results-header">
+                <h1 class="results-title" id="results-title">LEVEL COMPLETE!</h1>
+                <div class="results-stars" id="results-stars">
+                    <span class="star">★</span>
+                    <span class="star">★</span>
+                    <span class="star">★</span>
+                </div>
+            </div>
+            <div class="results-stats">
+                <div class="result-stat">
+                    <span class="result-label">Score</span>
+                    <span class="result-value" id="final-score">0</span>
+                </div>
+                <div class="result-stat">
+                    <span class="result-label">Coins Earned</span>
+                    <span class="result-value" id="final-coins">0</span>
+                </div>
+                <div class="result-stat">
+                    <span class="result-label">Correct Answers</span>
+                    <span class="result-value" id="final-correct">0/10</span>
+                </div>
+                <div class="result-stat">
+                    <span class="result-label">Accuracy</span>
+                    <span class="result-value" id="final-accuracy">0%</span>
+                </div>
+            </div>
+            <div class="results-buttons">
+                <button class="menu-btn primary-btn" id="replay-btn">
+                    <span class="btn-icon">↻</span>
+                    <span class="btn-text">REPLAY</span>
+                </button>
+                <button class="menu-btn" id="next-level-btn">
+                    <span class="btn-icon">→</span>
+                    <span class="btn-text">NEXT LEVEL</span>
+                </button>
+                <button class="menu-btn" id="home-btn">
+                    <span class="btn-icon">⌂</span>
+                    <span class="btn-text">HOME</span>
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Audio Elements -->
+    <audio id="correct-sound" preload="auto"></audio>
+    <audio id="wrong-sound" preload="auto"></audio>
+    <audio id="click-sound" preload="auto"></audio>
+    <audio id="ambient-sound" preload="auto" loop></audio>
+
+    <!-- Mouse Explorer Mascot -->
+    <div class="mouse-mascot" id="mouse-mascot">
+        <div class="mascot-body">
+            <span class="mascot-emoji" id="mascot-emoji">🐭</span>
+            <span class="mascot-flashlight">🔦</span>
+        </div>
+        <div class="mascot-glow"></div>
+    </div>
+    <div class="reward-burst-container" id="reward-burst-container"></div>
+
+    <!-- Hint Display (body-level, floats beside question) -->
+    <div class="hint-display" id="hint-display">
+        <div class="hint-box">
+            <div class="hint-label">HINT</div>
+            <div class="hint-word" id="hint-word">WORD</div>
+            <div class="hint-tip" id="hint-tip">mnemonic here</div>
+            <button class="hint-close-btn" id="hint-close-btn">GOT IT</button>
+        </div>
+    </div>
+
+    <script src="questions.js"></script>
+    <script>
+      const originalAddEventListener = document.addEventListener;
+      let gameLoaded = false;
+      let gameInitFn = null;
+      document.addEventListener = function(event, callback, options) {
+        if (event === 'DOMContentLoaded') {
+          gameInitFn = callback;
+          if (gameLoaded) callback({ type: 'DOMContentLoaded' });
+          return;
+        }
+        return originalAddEventListener.call(document, event, callback, options);
+      };
+
+      const api = new URLSearchParams(window.location.search).get("api");
+      const slug = new URLSearchParams(window.location.search).get("slug");
+      if (api && slug) {
+          window.fetch(api + "/api/public/projects/" + slug + "/quiz")
+            .then(r => r.json())
+            .then(data => {
+                if (data.success && data.data && data.data.length > 0) {
+                    window.QUESTIONS = { 1: [] };
+                    data.data.forEach(q => {
+                        window.QUESTIONS[1].push({
+                            question: q.question,
+                            options: q.options,
+                            correct: q.options.indexOf(q.answer),
+                            hint: q.hint,
+                            word: "Quiz",
+                            meaning: q.hint
+                        });
+                    });
+                    window.TOTAL_LEVELS = 1;
+                    window.QUESTIONS_PER_LEVEL = data.data.length;
+                }
+                gameLoaded = true;
+                if (gameInitFn) gameInitFn({ type: 'DOMContentLoaded' });
+            })
+            .catch(() => {
+                gameLoaded = true;
+                if (gameInitFn) gameInitFn({ type: 'DOMContentLoaded' });
+            });
+      } else {
+          gameLoaded = true;
+      }
+    </script>
+
+    
+
+    <script src="game.js"></script>
+    <script src="mascot.js"></script>
+</body>
+</html>

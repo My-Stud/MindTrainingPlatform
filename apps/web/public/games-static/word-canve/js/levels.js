@@ -1,0 +1,38 @@
+const PUZZLES = [
+  { emoji:"🧊",  label:"Ice",      hint:"ICE + ___",      answer:"ICELAND",   revealed:[0,1,2],       category:"Countries",  question:"This country's name starts with ice and is full of glaciers and volcanoes." },
+  { emoji:"⭐",  label:"Star",     hint:"STAR + ___",     answer:"STARFISH",  revealed:[0,1,2,3],     category:"Animals",    question:"This sea creature has the shape of a star and lives on ocean floors." },
+  { emoji:"☀️",  label:"Sun",      hint:"SUN + ___",      answer:"SUNSHINE",  revealed:[0,1,2],       category:"Nature",     question:"The warm bright light that comes from the sky on a clear day." },
+  { emoji:"🌊",  label:"Sea",      hint:"SEA + ___",      answer:"SEASHELL",  revealed:[0,1,2],       category:"Nature",     question:"You find this on the beach after the waves bring it to shore." },
+  { emoji:"🔥",  label:"Fire",     hint:"FIRE + ___",     answer:"FIREWORK",  revealed:[0,1,2,3],     category:"Things",     question:"This explodes in the sky with bright colors during celebrations." },
+  { emoji:"🌙",  label:"Moon",     hint:"MOON + ___",     answer:"MOONLIGHT", revealed:[0,1,2,3],     category:"Nature",     question:"The soft glowing light you see from the moon at night." },
+  { emoji:"🌧️",  label:"Rain",     hint:"RAIN + ___",     answer:"RAINBOW",   revealed:[0,1,2,3],     category:"Nature",     question:"After rain, this colorful arc appears in the sky with 7 colors." },
+  { emoji:"🐴",  label:"Horse",    hint:"HORSE + ___",    answer:"HORSEBACK", revealed:[0,1,2,3,4],   category:"Activities", question:"When you sit on a horse and ride it, you are riding on its ___." },
+  { emoji:"🌸",  label:"Flower",   hint:"FLOWER + ___",   answer:"FLOWERPOT", revealed:[0,1,2,3,4,5], category:"Things",     question:"A flower is planted and grows inside this container." },
+  { emoji:"🍂",  label:"Leaf",     hint:"LEAF + ___",     answer:"LEAFLET",   revealed:[0,1,2,3],     category:"Things",     question:"A small book made of paper, usually given for free to read." },
+  { emoji:"🐝",  label:"Bee",      hint:"BEE + ___",      answer:"BEEHIVE",   revealed:[0,1,2],       category:"Animals",    question:"This is the home where bees live and make honey together." },
+  { emoji:"🍎",  label:"Apple",    hint:"APPLE + ___",    answer:"APPLESAUCE",revealed:[0,1,2,3,4],   category:"Food",       question:"A soft sweet food made by cooking apples until they are mushy." },
+  { emoji:"🌍",  label:"Earth",    hint:"EARTH + ___",    answer:"EARTHWORM", revealed:[0,1,2,3,4],   category:"Animals",    question:"This worm lives underground in the soil and helps plants grow." },
+  { emoji:"🎵",  label:"Song",     hint:"SONG + ___",     answer:"SONGBIRD",  revealed:[0,1,2,3],     category:"Animals",    question:"A beautiful bird that sings musical tunes in the morning." },
+  { emoji:"💧",  label:"Water",    hint:"WATER + ___",    answer:"WATERFALL", revealed:[0,1,2,3,4],   category:"Nature",     question:"When water flows off a cliff and falls down in a stream." },
+  { emoji:"🪨",  label:"Sand",     hint:"SAND + ___",     answer:"SANDSTORM", revealed:[0,1,2,3],     category:"Nature",     question:"A strong wind blows sand in the desert and blocks the sun." },
+  { emoji:"👁️",  label:"Eye",      hint:"EYE + ___",      answer:"EYELID",    revealed:[0,1,2],       category:"Body",       question:"The thin skin that covers and protects your eye when you blink." },
+  { emoji:"🌺",  label:"Rose",     hint:"ROSE + ___",     answer:"ROSEBUD",   revealed:[0,1,2,3],     category:"Nature",     question:"A young rose flower that has not fully opened yet." },
+  { emoji:"🍯",  label:"Honey",    hint:"HONEY + ___",    answer:"HONEYBEE",  revealed:[0,1,2,3,4],   category:"Animals",    question:"This bee makes honey and lives in a hive with a queen." },
+  { emoji:"🌲",  label:"Wood",     hint:"WOOD + ___",     answer:"WOODPECKER",revealed:[0,1,2,3],     category:"Animals",    question:"This bird pecks and drills holes in tree trunks to find insects." },
+  { emoji:"🧁",  label:"Cake",     hint:"CAKE + ___",     answer:"CAKEWALK",  revealed:[0,1,2,3],     category:"Activities", question:"A fun game at fairs where you walk around cakes to win one." },
+  { emoji:"🐟",  label:"Fish",     hint:"FISH + ___",     answer:"FISHBOWL",  revealed:[0,1,2,3],     category:"Things",     question:"A round glass container where you keep a pet fish at home." },
+  { emoji:"❄️",  label:"Snow",     hint:"SNOW + ___",     answer:"SNOWFLAKE", revealed:[0,1,2,3],     category:"Nature",     question:"Each one is unique and falls from clouds in winter, made of ice." },
+  { emoji:"🌻",  label:"Sun",      hint:"SUN + ___",      answer:"SUNFLOWER", revealed:[0,1,2],       category:"Nature",     question:"A tall yellow flower that always faces the sun as it moves." },
+  { emoji:"🦇",  label:"Bat",      hint:"BAT + ___",      answer:"BATHTUB",   revealed:[0,1,2],       category:"Things",     question:"A large container in your bathroom where you fill it with water to take a bath." },
+  { emoji:"🌈",  label:"Rain",     hint:"RAIN + ___",     answer:"RAINCOAT",  revealed:[0,1,2,3],     category:"Clothing",   question:"You wear this waterproof jacket to stay dry when it rains outside." },
+  { emoji:"🦊",  label:"Fox",      hint:"FOX + ___",      answer:"FOXGLOVE",  revealed:[0,1,2],       category:"Nature",     question:"A tall plant with bell-shaped purple flowers that grow in gardens." },
+  { emoji:"🍑",  label:"Peach",    hint:"PEACH + ___",    answer:"PEACHFUZZ", revealed:[0,1,2,3,4],   category:"Food",       question:"The soft fuzzy skin on the outside of a peach fruit." },
+  { emoji:"🪵",  label:"Log",      hint:"LOG + ___",      answer:"LOGGING",   revealed:[0,1,2],       category:"Activities", question:"The work of cutting down trees in a forest for wood." },
+  { emoji:"🦢",  label:"Swan",     hint:"SWAN + ___",     answer:"SWANSONG",  revealed:[0,1,2,3],     category:"Nature",     question:"A final performance or act before someone retires or leaves." },
+];
+
+const KB_ROWS = [
+  ['Q','W','E','R','T','Y','U','I','O','P'],
+  ['A','S','D','F','G','H','J','K','L'],
+  ['Z','X','C','V','B','N','M']
+];

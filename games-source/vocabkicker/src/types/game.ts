@@ -1,0 +1,18 @@
+export interface QuizQuestion {
+  readonly question: string;
+  readonly answer: string;
+  readonly hint?: string;
+  readonly options: readonly string[];
+}
+
+export interface GameStatus {
+  readonly phase: string;
+  readonly score: number;
+  readonly streak: number;
+  readonly qIdx: number;
+  readonly totalQuestions: number;
+  readonly maxStreak: number;
+  readonly results: readonly { readonly correct: boolean; readonly answerText: string }[];
+  readonly question: QuizQuestion | null;
+  readonly feedback: { readonly correct: boolean; readonly pts: number; readonly msg: string | null } | null;
+}

@@ -1,0 +1,44 @@
+{
+  "name": "mind-training-app",
+  "version": "0.1.0",
+  "private": true,
+  "scripts": {
+    "dev": "next dev",
+    "build": "next build",
+    "start": "next start",
+    "lint": "eslint",
+    "db:generate": "prisma generate",
+    "db:push": "prisma db push",
+    "postinstall": "prisma generate"
+  },
+  "dependencies": {
+    "@auth/prisma-adapter": "^2.11.2",
+    "bcryptjs": "^3.0.3",
+    "check-if-word": "^1.2.1",
+    "client-only": "^0.0.1",
+    "clsx": "^2.1.1",
+    "csv-parse": "^7.0.1",
+    "framer-motion": "^12.40.0",
+    "jimp": "^0.22.10",
+    "lucide-react": "^0.575.0",
+    "mammoth": "^1.12.1",
+    "next": "16.3.1",
+    "next-auth": "^4.24.14",
+    "node-emoji": "^2.2.0",
+    "nodemailer": "^7.0.13",
+    "ping-pong-trivia": "https://github.com/md-asharaf/trivia-smash/tarball/main",
+    "react": "19.2.8",
+    "react-dom": "19.2.8",
+    "server-only": "^0.0.1",
+    "swiper": "^12.2.0",
+    "tailwind-merge": "^3.5.0",
+    "@tailwindcss/postcss": "^4",
+    "tailwindcss": "^4",
+    "@prisma/client": "^5.22.0",
+    "prisma": "^5.22.0"
+  },
+  "devDependencies": {
+    "eslint": "^9",
+    "eslint-config-next": "16.3.1"
+  }
+}

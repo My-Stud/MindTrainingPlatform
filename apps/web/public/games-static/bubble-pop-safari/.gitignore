@@ -1,0 +1,9 @@
+# Development-only files
+*.xlsx
+*.xls
+extract_words.py
+
+# OS files
+Thumbs.db
+Desktop.ini
+.DS_Store

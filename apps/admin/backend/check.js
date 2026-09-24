@@ -1,0 +1,1 @@
+const { PrismaClient } = require('@prisma/client'); const prisma = new PrismaClient(); async function main() { const p = await prisma.project.findMany(); console.log(p); const f = await prisma.folder.findMany(); console.log(f); const q = await prisma.question.findMany(); console.log(q); } main().finally(() => prisma.$disconnect());

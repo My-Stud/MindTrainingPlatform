@@ -1,0 +1,175 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <script>
+      const __originalFetch = window.fetch;
+      window.fetch = async function() {
+        let url = arguments[0];
+        if (typeof url === 'string' && url.includes('/quiz') && url.includes('projects')) {
+            const api = new URLSearchParams(window.location.search).get("api");
+            const slug = new URLSearchParams(window.location.search).get("slug");
+            if (api && slug) {
+                arguments[0] = api.replace(/\/+$/, '') + "/api/public/projects/" + slug + "/quiz";
+            }
+        }
+        
+        const response = await __originalFetch.apply(this, arguments);
+        const clone = response.clone();
+        
+        response.json = async function() {
+            const data = await clone.json();
+            if (data && data.data && Array.isArray(data.data)) {
+                data.data.forEach(q => {
+                    if (Array.isArray(q.options)) q.options.sort(() => Math.random() - 0.5);
+                });
+            } else if (Array.isArray(data)) {
+                data.forEach(q => {
+                    if (Array.isArray(q.options)) q.options.sort(() => Math.random() - 0.5);
+                });
+            }
+            return data;
+        };
+        return response;
+      };
+    </script>
+    
+
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
+  <title>Seven Wonders - Word Playground</title>
+  <link rel="stylesheet" href="css/styles.css">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+</head>
+<body>
+
+  <!-- Full-screen background image -->
+  <div class="game-world" id="gameWorld">
+    <img src="assets/seven wonders.jpg" alt="Seven Wonders of the World" class="bg-image" draggable="false">
+  </div>
+
+  <!-- MODE SELECT SCREEN -->
+  <div class="mode-screen" id="modeScreen">
+    <div class="mode-card">
+      <div class="mode-title">Seven Wonders</div>
+      <div class="mode-subtitle">Word Playground</div>
+
+      <div class="mode-options">
+        <button class="mode-btn mode-solo" id="modeSolo">
+          <span class="mode-btn-icon">&#127939;</span>
+          <span class="mode-btn-label">Solo Play</span>
+          <span class="mode-btn-desc">Type & explore on your own</span>
+        </button>
+        <button class="mode-btn mode-duo" id="modeDuo">
+          <span class="mode-btn-icon">&#128101;</span>
+          <span class="mode-btn-label">2 Players</span>
+          <span class="mode-btn-desc">Take turns & compete!</span>
+        </button>
+      </div>
+
+      <!-- Player name inputs (hidden by default) -->
+      <div class="player-setup" id="playerSetup" style="display:none;">
+        <div class="player-inputs">
+          <div class="player-field">
+            <label class="player-label" style="color: #FF6B8A;">Player 1</label>
+            <input type="text" id="p1Name" class="player-name-input" placeholder="Name..." maxlength="10" autocomplete="off">
+          </div>
+          <div class="player-field">
+            <label class="player-label" style="color: #48DBFB;">Player 2</label>
+            <input type="text" id="p2Name" class="player-name-input" placeholder="Name..." maxlength="10" autocomplete="off">
+          </div>
+        </div>
+        <button class="mode-go-btn" id="modeGo">Let's Go! &#127937;</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- FLOATING WORD PANEL -->
+  <div class="word-panel" id="wordPanel" style="display:none;">
+
+    <!-- Turn indicator (2P mode only) -->
+    <div class="turn-bar" id="turnBar" style="display:none;">
+      <div class="player-tag player-1-tag" id="p1Tag">
+        <span class="player-dot" style="background:#FF6B8A;"></span>
+        <span class="player-tag-name" id="p1TagName">P1</span>
+        <span class="player-score" id="p1Score">0</span>
+      </div>
+      <div class="turn-vs">VS</div>
+      <div class="player-tag player-2-tag" id="p2Tag">
+        <span class="player-dot" style="background:#48DBFB;"></span>
+        <span class="player-tag-name" id="p2TagName">P2</span>
+        <span class="player-score" id="p2Score">0</span>
+      </div>
+    </div>
+
+    <!-- Active player turn indicator -->
+    <div class="active-turn" id="activeTurn" style="display:none;">
+      <span class="active-turn-name" id="activeTurnName"></span>
+      <span class="active-turn-label">'s turn</span>
+    </div>
+
+    <!-- Word of the Day banner -->
+    <div class="wotd-banner" id="wotdBanner">
+      <span class="wotd-icon">&#127942;</span>
+      <div class="wotd-text">
+        <span class="wotd-label">Word of the Day</span>
+        <span class="wotd-word" id="wotdWord"></span>
+        <span class="wotd-hint" id="wotdHint"></span>
+      </div>
+      <button class="wotd-claim" id="wotdClaim" title="Type this word!">&#10140;</button>
+    </div>
+
+    <!-- Rotating category prompt -->
+    <div class="category-prompt" id="categoryPrompt">
+      <span class="category-emoji" id="categoryEmoji">&#129315;</span>
+      <span class="category-text" id="categoryText">Type something silly!</span>
+    </div>
+
+    <div class="panel-header">
+      <span class="panel-title">Type a Word</span>
+      <span class="panel-sparkle">&#10024;</span>
+    </div>
+
+    <div class="input-wrapper">
+      <input
+        type="text"
+        id="wordInput"
+        class="word-input"
+        placeholder="Type here..."
+        maxlength="20"
+        autocomplete="off"
+        spellcheck="false"
+      >
+      <button class="add-btn" id="addBtn" title="Add word">+</button>
+    </div>
+
+    <!-- Points earned popup -->
+    <div class="points-popup" id="pointsPopup"></div>
+
+    <div class="chip-area" id="chipArea">
+      <p class="empty-hint" id="emptyHint">Type a word & press Enter!</p>
+    </div>
+
+    <div class="panel-actions">
+      <button class="action-btn surprise-btn" id="surpriseBtn" title="Random funny word">&#127922; Surprise Me</button>
+      <button class="action-btn reset-btn" id="resetBtn" title="Remove all placed words">&#128465;&#65039; Reset</button>
+    </div>
+
+    <!-- Leaderboard (2P mode only) -->
+    <div class="leaderboard" id="leaderboard" style="display:none;">
+      <div class="leaderboard-title">&#127942; Leaderboard</div>
+      <div class="leaderboard-entries" id="leaderboardEntries"></div>
+    </div>
+  </div>
+
+  <!-- Streak counter -->
+  <div class="streak-counter" id="streakCounter"></div>
+
+  <!-- Instructions toast -->
+  <div class="toast" id="toast">
+    <span>&#128070; Drag chips onto the picture!</span>
+  </div>
+
+  <script src="js/game.js"></script>
+</body>
+</html>

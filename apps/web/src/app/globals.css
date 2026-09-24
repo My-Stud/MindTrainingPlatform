@@ -1,0 +1,61 @@
+@import url('https://fonts.googleapis.com/css2?family=Noto+Color+Emoji&display=swap');
+
+@import "tailwindcss";
+
+@theme {
+  --color-primary-50: #fff7ed;
+  --color-primary-100: #ffedd5;
+  --color-primary-500: #f97316;
+  /* Orange */
+  --color-primary-600: #ea580c;
+  --color-primary-700: #c2410c;
+
+  --color-accent-50: #ecfdf5;
+  --color-accent-100: #d1fae5;
+  --color-accent-500: #10b981;
+  /* Emerald Green */
+  --color-accent-600: #059669;
+
+  --color-background: #f8fafc;
+  /* Very light blue/gray */
+  --color-surface: #ffffff;
+  --color-surface-hover: #f1f5f9;
+
+  --color-foreground: #0f172a;
+  --color-text-muted: #64748b;
+
+  --font-sans: var(--font-playfair-display);
+  --font-mono: var(--font-geist-mono);
+
+  --animate-extreme-shake: extreme-shake 0.5s ease-in-out infinite;
+  
+  @keyframes extreme-shake {
+    0%, 100% { transform: translateX(0) rotate(0); }
+    10% { transform: translateX(-15px) rotate(-15deg) scale(1.2); }
+    20% { transform: translateX(15px) rotate(15deg) scale(1.2); }
+    30% { transform: translateX(-15px) rotate(-15deg) scale(1.2); }
+    40% { transform: translateX(15px) rotate(15deg) scale(1.2); }
+    50% { transform: translateX(-15px) rotate(-15deg) scale(1.2); }
+    60% { transform: translateX(15px) rotate(15deg) scale(1.2); }
+    70% { transform: translateX(-15px) rotate(-15deg) scale(1.2); }
+    80% { transform: translateX(15px) rotate(15deg) scale(1.2); }
+    90% { transform: translateX(-15px) rotate(-15deg) scale(1.2); }
+  }
+}
+
+body {
+  background-color: var(--color-background);
+  color: var(--color-foreground);
+  font-family: var(--font-sans), Arial, Helvetica, sans-serif;
+  margin: 0;
+  padding: 0;
+  min-height: 100vh;
+}
+.noto-emoji {
+  font-family: 'Noto Color Emoji', sans-serif;
+}
+
+.custom-scrollbar::-webkit-scrollbar { width: 6px; }
+.custom-scrollbar::-webkit-scrollbar-track { background: transparent; }
+.custom-scrollbar::-webkit-scrollbar-thumb { background: #cbd5e1; border-radius: 4px; }
+.custom-scrollbar::-webkit-scrollbar-thumb:hover { background: #94a3b8; }

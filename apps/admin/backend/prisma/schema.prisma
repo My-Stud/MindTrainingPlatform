@@ -1,0 +1,85 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+generator client {
+  provider = "prisma-client-js"
+  engineType = "binary"
+}
+
+datasource db {
+  provider = "mysql"
+  url      = env("DATABASE_URL")
+}
+
+model Admin {
+  id           Int      @id @default(autoincrement())
+  name         String
+  email        String   @unique
+  passwordHash String
+  role         String   @default("sub_admin")
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @updatedAt
+}
+
+model Project {
+  id                Int        @id @default(autoincrement())
+  name              String
+  slug              String     @unique
+  projectType       String     @default("classic")
+  fieldLabelField1  String     @default("Field 1")
+  fieldLabelField2  String     @default("Field 2")
+  fieldLabelField3  String     @default("Field 3")
+  mainQuestionField String     @default("field2")
+  questionsPerQuiz  Int        @default(15)
+  allowedOrigins    Json       @default("[]")
+  activeFolderId    Int?
+  createdAt         DateTime   @default(now())
+  updatedAt         DateTime   @updatedAt
+  questions         Question[]
+  folders           Folder[]
+  activeFolder      Folder?    @relation("ActiveFolder", fields: [activeFolderId], references: [id])
+}
+
+model Folder {
+  id            Int        @id @default(autoincrement())
+  name          String     @db.VarChar(255)
+  projectId     Int
+  project       Project    @relation(fields: [projectId], references: [id], onDelete: Cascade)
+  activeIn      Project[]  @relation("ActiveFolder")
+  questions     Question[]
+  createdAt     DateTime   @default(now())
+  updatedAt     DateTime   @updatedAt
+
+  @@index([projectId])
+}
+
+model Question {
+  id            Int      @id @default(autoincrement())
+  projectId     Int
+  project       Project  @relation(fields: [projectId], references: [id], onDelete: Cascade)
+  folderId      Int?
+  folder        Folder?  @relation(fields: [folderId], references: [id], onDelete: Cascade)
+  field1        String   @db.Text
+  field2        String   @db.Text
+  field3        String   @db.Text
+  optionA       String   @db.Text
+  optionB       String   @db.Text
+  optionC       String   @db.Text
+  optionD       String   @db.Text
+  correctAnswer String   @default("") @db.VarChar(255)
+  hint          String   @db.Text
+  difficulty    String   @default("medium") @db.VarChar(255)
+  category      String   @default("") @db.VarChar(255)
+  createdAt     DateTime @default(now())
+  updatedAt     DateTime @updatedAt
+
+  @@index([projectId])
+}
+
+model Settings {
+  id                 Int      @id @default(autoincrement())
+  allowedGameOrigins Json     @default("[]")
+  publicApiBase      String   @default("")
+  createdAt          DateTime @default(now())
+  updatedAt          DateTime @updatedAt
+}

@@ -1,0 +1,270 @@
+/* ================================================================
+   MOUSE EXPLORER MASCOT — Additive CSS for Mystery Pointer Quiz
+   ================================================================
+   Zero modifications to existing CSS. Everything here is additive.
+   ================================================================ */
+
+/* ----------------------------------------------------------------
+   1. MOUSE MASCOT — sits at the edge of the spotlight
+   ---------------------------------------------------------------- */
+.mouse-mascot {
+    position: fixed;
+    width: 50px;
+    height: 50px;
+    pointer-events: none;
+    z-index: 10000;
+    transform: translate(-50%, -50%);
+    transition: opacity 0.4s ease;
+    display: none;
+}
+
+.mascot-body {
+    position: relative;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 100%;
+    height: 100%;
+    animation: mascotBob 1.5s ease-in-out infinite;
+}
+
+.mascot-emoji {
+    font-size: 2rem;
+    line-height: 1;
+    filter: drop-shadow(0 0 8px rgba(251, 191, 36, 0.4));
+    transition: transform 0.2s ease;
+}
+
+.mascot-flashlight {
+    position: absolute;
+    bottom: -2px;
+    right: -8px;
+    font-size: 1.1rem;
+    filter: drop-shadow(0 0 6px rgba(255, 200, 0, 0.5));
+    transform: rotate(-30deg);
+}
+
+.mascot-glow {
+    position: absolute;
+    width: 40px;
+    height: 40px;
+    border-radius: 50%;
+    background: radial-gradient(circle, rgba(255, 200, 0, 0.15) 0%, transparent 70%);
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    animation: glowPulse 2s ease-in-out infinite;
+    pointer-events: none;
+}
+
+@keyframes mascotBob {
+    0%, 100% { transform: translateY(0); }
+    50% { transform: translateY(-3px); }
+}
+
+@keyframes glowPulse {
+    0%, 100% { opacity: 0.6; transform: translate(-50%, -50%) scale(1); }
+    50% { opacity: 1; transform: translate(-50%, -50%) scale(1.15); }
+}
+
+/* Walking tilt — applied via JS class */
+.mouse-mascot.walking .mascot-body {
+    animation: mascotWalk 0.4s ease-in-out infinite;
+}
+
+@keyframes mascotWalk {
+    0%, 100% { transform: translateY(0) rotate(0deg); }
+    25% { transform: translateY(-2px) rotate(3deg); }
+    75% { transform: translateY(-2px) rotate(-3deg); }
+}
+
+/* ----------------------------------------------------------------
+   2. MASCOT REACTIONS — correct / incorrect
+   ---------------------------------------------------------------- */
+.mouse-mascot.react-correct .mascot-body {
+    animation: mascotHappy 0.8s ease forwards;
+}
+
+@keyframes mascotHappy {
+    0% { transform: scale(1) translateY(0); }
+    20% { transform: scale(1.25) translateY(-12px); }
+    40% { transform: scale(0.95) translateY(0); }
+    60% { transform: scale(1.1) translateY(-6px); }
+    80% { transform: scale(1) translateY(0); }
+    100% { transform: scale(1) translateY(0); }
+}
+
+.mouse-mascot.react-incorrect .mascot-body {
+    animation: mascotShake 0.6s ease forwards;
+}
+
+@keyframes mascotShake {
+    0%, 100% { transform: translateX(0) rotate(0deg); }
+    15% { transform: translateX(-6px) rotate(-5deg); }
+    30% { transform: translateX(5px) rotate(4deg); }
+    45% { transform: translateX(-4px) rotate(-3deg); }
+    60% { transform: translateX(3px) rotate(2deg); }
+    75% { transform: translateX(-2px) rotate(-1deg); }
+}
+
+/* ----------------------------------------------------------------
+   3. REWARD BURST — floating emoji particles on correct
+   ---------------------------------------------------------------- */
+.reward-burst-container {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    pointer-events: none;
+    z-index: 9999;
+}
+
+.reward-particle {
+    position: absolute;
+    font-size: 1.2rem;
+    pointer-events: none;
+    animation: rewardFloat 1s ease-out forwards;
+}
+
+@keyframes rewardFloat {
+    0% {
+        opacity: 1;
+        transform: translate(0, 0) scale(1) rotate(0deg);
+    }
+    50% { opacity: 0.8; }
+    100% {
+        opacity: 0;
+        transform: translate(var(--rx, 30px), var(--ry, -80px)) scale(0.4) rotate(var(--rr, 180deg));
+    }
+}
+
+/* ----------------------------------------------------------------
+   4. COIN POP — scale animation when coin count changes
+   ---------------------------------------------------------------- */
+.stat-item.coin-pop {
+    animation: coinPop 0.35s ease;
+}
+
+@keyframes coinPop {
+    0% { transform: scale(1); }
+    40% { transform: scale(1.2); }
+    100% { transform: scale(1); }
+}
+
+/* ----------------------------------------------------------------
+   5. AMBIENT PARTICLES — faint drifting sparkles in dark room
+   ---------------------------------------------------------------- */
+.mascot-ambient {
+    position: absolute;
+    width: 3px;
+    height: 3px;
+    border-radius: 50%;
+    pointer-events: none;
+    z-index: 6;
+    opacity: 0;
+    animation: ambientDrift linear infinite;
+}
+
+@keyframes ambientDrift {
+    0% {
+        opacity: 0;
+        transform: translateY(0) translateX(0);
+    }
+    10% { opacity: 0.3; }
+    50% { opacity: 0.2; }
+    90% { opacity: 0.3; }
+    100% {
+        opacity: 0;
+        transform: translateY(-100vh) translateX(var(--dx, 20px));
+    }
+}
+
+/* ----------------------------------------------------------------
+   6. HINT DISPLAY — compact strip below the question
+   ---------------------------------------------------------------- */
+.hint-display {
+    position: fixed !important;
+    top: 160px !important;
+    left: 50% !important;
+    right: auto !important;
+    transform: translateX(-50%) !important;
+    z-index: 600;
+    opacity: 0;
+    visibility: hidden;
+    transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+    pointer-events: none;
+}
+
+.hint-display.show {
+    opacity: 1 !important;
+    visibility: visible !important;
+    transform: translateX(-50%) !important;
+    pointer-events: auto;
+}
+
+/* Hint box compact style */
+.hint-box {
+    display: flex !important;
+    align-items: center !important;
+    gap: 16px !important;
+    padding: 10px 24px !important;
+    background: rgba(20, 16, 10, 0.92) !important;
+    border: 1.5px solid rgba(251, 191, 36, 0.4) !important;
+    border-radius: 30px !important;
+    box-shadow: 0 0 20px rgba(251, 191, 36, 0.15) !important;
+    white-space: nowrap !important;
+}
+
+.hint-label {
+    display: none !important;
+}
+
+.hint-word {
+    color: #fbbf24 !important;
+    font-family: 'Fredoka One', cursive !important;
+    font-size: 1.1rem !important;
+    text-shadow: 0 0 15px rgba(251, 191, 36, 0.5) !important;
+}
+
+.hint-tip {
+    color: rgba(255, 255, 255, 0.5) !important;
+    font-size: 0.8rem !important;
+}
+
+.hint-close-btn {
+    display: none !important;
+}
+
+/* ----------------------------------------------------------------
+   7. RESPONSIVE — smaller mascot on mobile
+   ---------------------------------------------------------------- */
+@media (max-width: 768px) {
+    .mouse-mascot {
+        width: 40px;
+        height: 40px;
+    }
+    .mascot-emoji {
+        font-size: 1.6rem;
+    }
+    .mascot-flashlight {
+        font-size: 0.9rem;
+        right: -6px;
+    }
+}
+
+/* ----------------------------------------------------------------
+   8. SAFE ANIMATION GUARD
+   ---------------------------------------------------------------- */
+@media (prefers-reduced-motion: reduce) {
+    .mouse-mascot .mascot-body,
+    .mouse-mascot .mascot-glow,
+    .reward-particle,
+    .mascot-ambient {
+        animation: none !important;
+    }
+    .mouse-mascot.react-correct .mascot-body,
+    .mouse-mascot.react-incorrect .mascot-body {
+        animation: none !important;
+    }
+}

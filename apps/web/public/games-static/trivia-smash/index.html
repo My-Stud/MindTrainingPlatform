@@ -1,0 +1,101 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <script>
+      const __originalFetch = window.fetch;
+      window.fetch = async function() {
+        let url = arguments[0];
+        if (typeof url === 'string' && url.includes('/quiz') && url.includes('projects')) {
+            const api = new URLSearchParams(window.location.search).get("api");
+            const slug = new URLSearchParams(window.location.search).get("slug");
+            if (api && slug) {
+                arguments[0] = api.replace(/\/+$/, '') + "/api/public/projects/" + slug + "/quiz";
+            }
+        }
+        
+        const response = await __originalFetch.apply(this, arguments);
+        const clone = response.clone();
+        
+        response.json = async function() {
+            const data = await clone.json();
+            if (data && data.data && Array.isArray(data.data)) {
+                data.data.forEach(q => {
+                    if (Array.isArray(q.options)) q.options.sort(() => Math.random() - 0.5);
+                });
+            } else if (Array.isArray(data)) {
+                data.forEach(q => {
+                    if (Array.isArray(q.options)) q.options.sort(() => Math.random() - 0.5);
+                });
+            }
+            return data;
+        };
+        return response;
+      };
+    </script>
+    
+
+    <meta charset="UTF-8" />
+    <link rel="icon" type="image/svg+xml" href="/vite.svg" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
+    <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate" />
+    <meta http-equiv="Pragma" content="no-cache" />
+    <meta http-equiv="Expires" content="0" />
+    <title>Trivia Smash</title>
+    <script type="module" crossorigin src="./assets/index-DiMjKh4A.js?v=live_1788071816428"></script>
+    <link rel="stylesheet" crossorigin href="./assets/index-CHwmU39C.css">
+    <script>
+      window.addEventListener('DOMContentLoaded', () => {
+        const bottomContainer = document.createElement('div');
+        bottomContainer.id = "custom-bottom-options";
+        Object.assign(bottomContainer.style, {
+          position: 'absolute',
+          bottom: '20px',
+          left: '50%',
+          transform: 'translateX(-50%)',
+          display: 'flex',
+          gap: '15px',
+          zIndex: 9999,
+          width: '90%',
+          justifyContent: 'center',
+          flexWrap: 'wrap',
+          pointerEvents: 'none'
+        });
+        document.body.appendChild(bottomContainer);
+
+        const observer = new MutationObserver(() => {
+          const labels = Array.from(document.querySelectorAll('.option-label'));
+          if (labels.length > 0) {
+            let html = '';
+            const letters = ['A', 'B', 'C', 'D'];
+            
+            labels.forEach((label, i) => {
+              const letter = letters[i] || '?';
+              if (label.textContent.trim().length > 1) {
+                const originalText = label.textContent.trim();
+                label.setAttribute('data-original', originalText);
+                label.textContent = letter;
+              }
+              
+              const orig = label.getAttribute('data-original') || label.textContent;
+              const color = ['#3b82f6', '#ef4444', '#eab308', '#22c55e'][i] || '#fff';
+              html += '<div style="background: rgba(15, 23, 42, 0.9); color: white; padding: 12px 24px; border-radius: 12px; font-weight: bold; border: 2px solid rgba(255,255,255,0.2); box-shadow: 0 8px 24px rgba(0,0,0,0.5); font-size: 1.1rem; backdrop-filter: blur(8px); font-family: system-ui, sans-serif;">' +
+                  '<span style="color:' + color + '; margin-right:8px; font-weight:900;">[' + letter + ']</span> ' + orig +
+                '</div>';
+            });
+            
+            if (bottomContainer.innerHTML !== html) {
+              bottomContainer.innerHTML = html;
+            }
+          } else {
+            if (bottomContainer.innerHTML !== '') {
+              bottomContainer.innerHTML = '';
+            }
+          }
+        });
+
+        observer.observe(document.body, { childList: true, subtree: true, characterData: true });
+      });
+    </script>
+    <div id="root"></div>
+  </body>
+</html>

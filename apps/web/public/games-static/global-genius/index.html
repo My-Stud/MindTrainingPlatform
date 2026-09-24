@@ -1,0 +1,307 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <script>
+      const __originalFetch = window.fetch;
+      window.fetch = async function() {
+        let url = arguments[0];
+        if (typeof url === 'string' && url.includes('/quiz') && url.includes('projects')) {
+            const api = new URLSearchParams(window.location.search).get("api");
+            const slug = new URLSearchParams(window.location.search).get("slug");
+            if (api && slug) {
+                arguments[0] = api.replace(/\/+$/, '') + "/api/public/projects/" + slug + "/quiz";
+            }
+        }
+        
+        const response = await __originalFetch.apply(this, arguments);
+        const clone = response.clone();
+        
+        response.json = async function() {
+            const data = await clone.json();
+            if (data && data.data && Array.isArray(data.data)) {
+                data.data.forEach(q => {
+                    if (Array.isArray(q.options)) q.options.sort(() => Math.random() - 0.5);
+                });
+            } else if (Array.isArray(data)) {
+                data.forEach(q => {
+                    if (Array.isArray(q.options)) q.options.sort(() => Math.random() - 0.5);
+                });
+            }
+            return data;
+        };
+        return response;
+      };
+    </script>
+    
+
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>World Explorer Adventure</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Baloo+2:wght@500;600;700;800&family=Nunito:wght@400;600;700;800&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="css/styles.css">
+<link rel="stylesheet" href="css/level2.css">
+</head>
+<body>
+
+<div id="scenery"></div>
+
+<!-- ===== STAGE SELECTION SCREEN ===== -->
+<div id="stage-select">
+  <div class="stage-select-card">
+    <div class="stage-select-header">
+      <span class="header-icon">🌍</span>
+      <h1>World Explorer Adventure</h1>
+      <p>Choose your challenge</p>
+    </div>
+    <div class="stage-section">
+      <div class="stage-section-title">
+        <span class="section-icon">🎯</span>
+        Level 1 — Match the Capitals
+        <span class="section-icon">🎯</span>
+      </div>
+      <div class="stage-grid">
+        <button class="stage-btn" data-stage="asia" onclick="selectStage('asia')">
+          <span class="stage-emoji">🌏</span>
+          <span class="stage-name">Asia</span>
+          <span class="stage-desc">21 Countries</span>
+        </button>
+        <button class="stage-btn" data-stage="europe" onclick="selectStage('europe')">
+          <span class="stage-emoji">🌍</span>
+          <span class="stage-name">Europe</span>
+          <span class="stage-desc">12 Countries</span>
+        </button>
+        <button class="stage-btn" data-stage="africa" onclick="selectStage('africa')">
+          <span class="stage-emoji">🌍</span>
+          <span class="stage-name">Africa</span>
+          <span class="stage-desc">12 Countries</span>
+        </button>
+        <button class="stage-btn quiz-btn" onclick="selectStage('quiz')">
+          <span class="stage-emoji">🧠</span>
+          <span class="stage-name">Quiz</span>
+          <span class="stage-desc">Test Yourself</span>
+        </button>
+      </div>
+    </div>
+    <div class="stage-section">
+      <div class="stage-section-title">
+        <span class="section-icon">📦</span>
+        Level 2 — Sorting Puzzle (Country + Capital + Currency)
+        <span class="section-icon">📦</span>
+      </div>
+      <div class="stage-grid">
+        <button class="stage-btn sorting-btn" onclick="startLevel2('easy')">
+          <span class="stage-emoji">🌏</span>
+          <span class="stage-name">Asia</span>
+          <span class="stage-desc">14 Countries</span>
+        </button>
+        <button class="stage-btn sorting-btn" onclick="startLevel2('medium')">
+          <span class="stage-emoji">🌍</span>
+          <span class="stage-name">Europe</span>
+          <span class="stage-desc">14 Countries</span>
+        </button>
+        <button class="stage-btn sorting-btn" onclick="startLevel2('hard')">
+          <span class="stage-emoji">🌍</span>
+          <span class="stage-name">Africa</span>
+          <span class="stage-desc">14 Countries</span>
+        </button>
+        <button class="stage-btn sorting-btn" onclick="startLevel2('expert')">
+          <span class="stage-emoji">🧠</span>
+          <span class="stage-name">All Regions</span>
+          <span class="stage-desc">42 Countries</span>
+        </button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ===== GAME AREA (Level 1) ===== -->
+<div id="game-area" style="display:none;">
+  <div id="topbar">
+    <div id="stars-pill" class="pill"><span class="icon">⭐</span><span id="star-count">0</span></div>
+    <div>
+      <div class="level-title" id="level-title">Asia</div>
+      <div id="progress-wrap"><div id="progress-bar"></div></div>
+      <div class="level-sub" id="progress-label">0 / 0 matched</div>
+    </div>
+    <div class="topbar-right">
+      <button class="ctrl-btn small" id="back-btn">← Back</button>
+      <div id="hearts" class="pill hearts-pill">❤️❤️❤️</div>
+      <div class="coin-pill"><div class="coin-icon-sm"></div><span id="coin-count">0</span></div>
+    </div>
+  </div>
+
+  <div id="stage">
+    <h1 id="title">🌍 Match the Capitals</h1>
+    <div id="subtitle">Place each capital into its jar on the treasure shelf</div>
+
+    <div class="shelf-container">
+      <div class="shelf-label"><span>🪵</span> Magical Treasure Shelf <span>🪵</span></div>
+      <div class="wooden-shelf">
+        <div id="jars"></div>
+      </div>
+    </div>
+
+    <div class="cards-container">
+      <div id="tray-label"><span>📍</span> Capital Cards</div>
+      <div id="tray"></div>
+    </div>
+  </div>
+
+  <div id="controls">
+    <button class="ctrl-btn" id="hint-btn">💡 Hint</button>
+    <button class="ctrl-btn" id="pause-btn">⏸ Pause</button>
+  </div>
+</div>
+
+<div id="drag-ghost"></div>
+
+<!-- ===== COMBO DISPLAY ===== -->
+<div id="combo-display" class="combo-display" style="display:none;"></div>
+
+<!-- ===== CELEBRATION CONTAINER ===== -->
+<div id="celebration-container"></div>
+
+<!-- ===== RETRY OVERLAY ===== -->
+<div id="retry-overlay" class="overlay-base">
+  <div id="retry-card" class="overlay-card">
+    <div style="font-size:48px;">💔</div>
+    <h2>Out of Hearts!</h2>
+    <p style="color:var(--wood-edge); margin:8px 0 16px;">Don't worry, try again!</p>
+    <div class="retry-buttons">
+      <button class="ctrl-btn gold" onclick="retryLevel()">🔄 Retry</button>
+      <button class="ctrl-btn" onclick="backToMenu()">🏠 Home</button>
+    </div>
+  </div>
+</div>
+
+<!-- ===== UNLOCK OVERLAY ===== -->
+<div id="unlock-overlay" class="overlay-base">
+  <div id="unlock-card" class="overlay-card">
+    <div id="unlock-emoji" style="font-size:60px;"></div>
+    <h2 id="unlock-text" style="color:var(--gold-bright); margin:8px 0;">Unlocked!</h2>
+  </div>
+</div>
+
+<!-- ===== LEVEL 2 AREA ===== -->
+<div id="level2-area" style="display:none;">
+  <div class="level2-bg"></div>
+  <div class="level2-awning"></div>
+
+  <div class="level2-topbar">
+    <div class="level2-left-btns">
+      <button class="level2-home-btn" onclick="backToMenu()">🏠</button>
+      <button class="level2-restart-btn" onclick="initLevel2(level2State.currentDifficulty)">🔄</button>
+    </div>
+    <div class="level2-level-badge" id="level2-level-badge">Level 1</div>
+    <div class="level2-coins">
+      <div class="level2-coin-icon"></div>
+      <span class="level2-coin-count" id="level2-stars">0</span>
+    </div>
+  </div>
+
+  <div class="level2-game">
+    <div class="level2-shelves" id="level2-shelves"></div>
+  </div>
+
+  <div class="level2-bottom">
+    <div class="level2-instruction">
+      Only <strong>EDGE</strong> items can be moved. Sort them all!
+    </div>
+    <div class="level2-bottom-btns">
+      <div></div>
+      <button class="level2-hint-btn" onclick="showLevel2Hint()">💡 Hint</button>
+      <button class="level2-undo-btn" onclick="undoLastMove()">
+        ↩️
+        <span class="level2-undo-count" id="level2-undo-count">3</span>
+      </button>
+    </div>
+  </div>
+
+  <div class="level2-hint-popup" id="level2-hint-popup"></div>
+</div>
+
+<!-- ===== LEVEL 2 COMPLETE OVERLAY ===== -->
+<div id="level2-complete-overlay">
+  <div id="level2-complete-card">
+    <div style="font-size:50px;">🏆</div>
+    <h2>Puzzle Complete!</h2>
+    <div class="level2-final-stats">
+      <div class="level2-final-stat">
+        <span class="stat-label">Stars</span>
+        <span class="stat-value" id="level2-final-stars">0</span>
+      </div>
+      <div class="level2-final-stat">
+        <span class="stat-label">Moves</span>
+        <span class="stat-value" id="level2-final-moves">0</span>
+      </div>
+    </div>
+    <div class="stamp">📦 Sorting Master</div>
+    <button class="ctrl-btn gold" onclick="backToMenu()">🚀 Continue</button>
+  </div>
+</div>
+
+<!-- ===== STAGE COMPLETE OVERLAY ===== -->
+<div id="stage-complete-overlay">
+  <div id="stage-complete-card">
+    <div id="stage-complete-emoji" style="font-size:50px;">🌏</div>
+    <h2><span id="stage-complete-name">Asia</span> Complete!</h2>
+    <div class="complete-stats">
+      <div class="stat-item">
+        <span class="stat-label">Stars Earned</span>
+        <span class="stat-value" id="stage-complete-stars">0</span>
+      </div>
+    </div>
+    <div class="stamp">🛂 Region Mastered</div>
+    <button id="stage-continue-btn" class="ctrl-btn gold">🚀 Continue</button>
+  </div>
+</div>
+
+<!-- ===== QUIZ OVERLAY ===== -->
+<div id="quiz-overlay">
+  <div id="quiz-card">
+    <div id="quiz-progress" class="quiz-progress">Question 1 of 10</div>
+    <div id="quiz-flag" class="quiz-flag">🌏</div>
+    <h2 id="quiz-country">Country Name</h2>
+    <div id="quiz-hint" class="quiz-hint">💡 Mnemonic</div>
+    <p class="quiz-instruction">Which capital belongs to this country?</p>
+    <div id="quiz-options" class="quiz-options"></div>
+    <div id="quiz-score" class="quiz-score">Score: 0</div>
+    <button id="quiz-back-btn" class="ctrl-btn" style="margin-top:12px;">← Back</button>
+  </div>
+</div>
+
+<!-- ===== QUIZ COMPLETE OVERLAY ===== -->
+<div id="quiz-complete-overlay">
+  <div id="quiz-complete-card">
+    <div style="font-size:50px;">🏆</div>
+    <h2>Quiz Complete!</h2>
+    <div class="quiz-final-score">
+      <span id="quiz-final-score">0</span> / <span id="quiz-total">100</span>
+    </div>
+    <div class="stamp">🧠 Quiz Champion</div>
+    <button id="quiz-continue-btn" class="ctrl-btn gold">🚀 Continue</button>
+  </div>
+</div>
+
+<!-- ===== WIN OVERLAY ===== -->
+<div id="win-overlay">
+  <div id="win-card">
+    <div style="font-size:40px;">🎉</div>
+    <h2>Level Complete!</h2>
+    <div id="win-stars"></div>
+    <div class="stamp">🛂 Passport Stamped</div>
+    <button id="continue-btn" class="ctrl-btn gold">🚀 Continue</button>
+  </div>
+</div>
+
+<script src="js/data.js"></script>
+<script src="js/data-europe.js"></script>
+<script src="js/data-africa.js"></script>
+<script src="js/data-level2.js"></script>
+<script src="js/game.js"></script>
+<script src="js/enhancements.js"></script>
+<script src="js/level2.js"></script>
+</body>
+</html>

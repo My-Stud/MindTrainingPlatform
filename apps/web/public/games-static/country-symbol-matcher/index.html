@@ -1,0 +1,104 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <script>
+      const __originalFetch = window.fetch;
+      window.fetch = async function() {
+        let url = arguments[0];
+        if (typeof url === 'string' && url.includes('/quiz') && url.includes('projects')) {
+            const api = new URLSearchParams(window.location.search).get("api");
+            const slug = new URLSearchParams(window.location.search).get("slug");
+            if (api && slug) {
+                arguments[0] = api.replace(/\/+$/, '') + "/api/public/projects/" + slug + "/quiz";
+            }
+        }
+        
+        const response = await __originalFetch.apply(this, arguments);
+        const clone = response.clone();
+        
+        response.json = async function() {
+            const data = await clone.json();
+            if (data && data.data && Array.isArray(data.data)) {
+                data.data.forEach(q => {
+                    if (Array.isArray(q.options)) q.options.sort(() => Math.random() - 0.5);
+                });
+            } else if (Array.isArray(data)) {
+                data.forEach(q => {
+                    if (Array.isArray(q.options)) q.options.sort(() => Math.random() - 0.5);
+                });
+            }
+            return data;
+        };
+        return response;
+      };
+    </script>
+    
+
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Country Symbol Match</title>
+<link rel="stylesheet" href="style.css">
+<script src="https://cdn.jsdelivr.net/npm/canvas-confetti@1.9.3/dist/confetti.browser.min.js"></script>
+</head>
+<body>
+<canvas id="confettiCanvas"></canvas>
+
+<div class="game-wrap">
+
+  <div class="topbar">
+    <button class="pill-btn" id="newGameBtn">
+      <span class="pill-icon">🔄</span>
+      <span class="pill-text">NEW<br>GAME</span>
+    </button>
+
+    <div class="brand">
+      <span class="flake-deco">❄</span>
+      COUNTRY <span class="accent">SYMBOLS</span>
+      <span class="flake-deco">❄</span>
+    </div>
+
+    <div class="status">
+      <div class="pill score-pill">🏆 <span id="scoreVal">0</span></div>
+      <div class="pill lives-pill">❤️ <span id="livesVal">3</span></div>
+      <button class="icon-btn" id="rulesBtn" title="How to Play">❓</button>
+      <button class="icon-btn" id="muteBtn" title="Mute / Unmute">🔊</button>
+    </div>
+  </div>
+
+  <div class="board-outer" id="boardOuter">
+    <span class="corner-flake tl">❄</span>
+    <span class="corner-flake tr">❄</span>
+    <span class="corner-flake bl">❄</span>
+    <span class="corner-flake br">❄</span>
+
+    <div class="board" id="board"></div>
+    <svg class="connector-layer" id="connectorLayer"></svg>
+  </div>
+
+</div>
+
+<div class="overlay" id="overlay">
+  <div class="modal">
+    <div class="modal-emoji" id="modalEmoji">🎉</div>
+    <h2 id="modalTitle">Well Done!</h2>
+    <div class="points"><span id="finalScore">0</span> pts</div>
+    <button id="restartBtn">Play Again</button>
+  </div>
+</div>
+
+<div class="overlay" id="rulesOverlay">
+  <div class="modal rules-modal">
+    <h2>How to Play ❄️</h2>
+    <ul class="rules-list">
+      <li><strong>Match</strong> a Country flag to its corresponding National Symbol.</li>
+      <li><strong>The Path:</strong> You can only connect two tiles if a clear, unblocked path can be drawn between them through empty spaces.</li>
+      <li><strong>Turns:</strong> The connecting path can have a maximum of <strong>2 turns</strong> (up to 3 straight lines).</li>
+      <li><strong>Edges:</strong> Paths are allowed to travel outside the outer boundary of the board.</li>
+    </ul>
+    <button id="gotItBtn">Got It!</button>
+  </div>
+</div>
+
+<script src="script.js"></script>
+</body>
+</html>

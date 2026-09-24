@@ -1,0 +1,200 @@
+@import url('https://fonts.googleapis.com/css2?family=Outfit:wght@400;600;700;800;900&display=swap');
+
+:root {
+  --primary: #f5c842;
+  --primary-dim: rgba(245,200,66,0.18);
+  --danger: #ff4d4d;
+  --success: #3ddc84;
+  --sky-blue: #4a87d5;
+  --surface: rgba(10, 14, 28, 0.72);
+  --surface-solid: #0d1120;
+  --border: rgba(255,255,255,0.12);
+  --border-bright: rgba(255,255,255,0.25);
+  --text: #f0f0f0;
+  --text-muted: rgba(255,255,255,0.55);
+  --font: 'Outfit', system-ui, sans-serif;
+
+  /* Option colors — vibrant modern */
+  --opt-a: #e84040;
+  --opt-b: #2d7cff;
+  --opt-c: #2ecf72;
+  --opt-d: #f5a623;
+}
+
+* { box-sizing: border-box; margin: 0; padding: 0; }
+
+body {
+  font-family: var(--font);
+  background: #0d1120;
+  color: var(--text);
+  overflow: hidden;
+  touch-action: none;
+  user-select: none;
+  -webkit-tap-highlight-color: transparent;
+}
+
+#root { width: 100vw; height: 100dvh; position: relative; }
+
+/* ── Glass Panel ──────────────────────────────────── */
+.glass-panel {
+  background: var(--surface);
+  backdrop-filter: blur(18px) saturate(140%);
+  -webkit-backdrop-filter: blur(18px) saturate(140%);
+  border: 1px solid var(--border-bright);
+  border-radius: 16px;
+  box-shadow:
+    0 8px 32px rgba(0,0,0,0.45),
+    inset 0 1px 0 rgba(255,255,255,0.1);
+}
+
+/* ── Modern Button ────────────────────────────────── */
+.ui-btn {
+  font-family: var(--font);
+  font-weight: 700;
+  font-size: 0.85rem;
+  letter-spacing: 0.04em;
+  padding: 8px 18px;
+  border-radius: 10px;
+  border: 1px solid var(--border-bright);
+  background: rgba(255,255,255,0.08);
+  color: var(--text);
+  cursor: pointer;
+  transition: background 0.18s, transform 0.12s, box-shadow 0.18s;
+  backdrop-filter: blur(10px);
+  -webkit-backdrop-filter: blur(10px);
+  display: flex; align-items: center; justify-content: center;
+  gap: 6px;
+  white-space: nowrap;
+}
+.ui-btn:hover:not(:disabled) {
+  background: rgba(255,255,255,0.16);
+  transform: translateY(-2px);
+  box-shadow: 0 4px 16px rgba(0,0,0,0.3);
+}
+.ui-btn:active:not(:disabled) { transform: translateY(0); }
+.ui-btn:disabled {
+  opacity: 0.35;
+  cursor: not-allowed;
+}
+
+.ui-btn.primary {
+  background: var(--primary);
+  color: #111;
+  border-color: transparent;
+  box-shadow: 0 0 0 0 rgba(245,200,66,0);
+  transition: background 0.18s, transform 0.12s, box-shadow 0.25s;
+}
+.ui-btn.primary:hover:not(:disabled) {
+  background: #ffd94d;
+  box-shadow: 0 0 24px rgba(245,200,66,0.45);
+  transform: translateY(-2px);
+}
+
+.ui-btn.danger { background: var(--danger); color: #fff; border-color: transparent; }
+.ui-btn.success { background: var(--success); color: #111; border-color: transparent; }
+
+/* ── Icon Button (square) ─────────────────────────── */
+.icon-btn {
+  font-family: var(--font);
+  width: 40px; height: 40px;
+  border-radius: 10px;
+  border: 1px solid var(--border-bright);
+  background: rgba(255,255,255,0.08);
+  color: var(--text);
+  cursor: pointer;
+  font-size: 1.1rem;
+  display: flex; align-items: center; justify-content: center;
+  transition: background 0.18s, transform 0.12s;
+  backdrop-filter: blur(10px);
+  -webkit-backdrop-filter: blur(10px);
+}
+.icon-btn:hover { background: rgba(255,255,255,0.18); transform: translateY(-1px); }
+.icon-btn:active { transform: translateY(0); }
+
+/* ── Score badge ──────────────────────────────────── */
+.score-badge {
+  display: flex; align-items: center; gap: 6px;
+  background: var(--primary-dim);
+  border: 1px solid rgba(245,200,66,0.35);
+  border-radius: 999px;
+  padding: 4px 14px;
+  font-weight: 800;
+  font-size: 0.9rem;
+  color: var(--primary);
+}
+
+/* ── Option pill ──────────────────────────────────── */
+.opt-pill {
+  border-radius: 12px;
+  border: 1.5px solid rgba(255,255,255,0.18);
+  padding: 9px 14px;
+  font-weight: 700;
+  font-size: 0.82rem;
+  color: #fff;
+  text-align: left;
+  display: flex; align-items: center; gap: 8px;
+  line-height: 1.3;
+  word-break: break-word;
+  transition: opacity 0.2s, filter 0.2s;
+}
+.opt-pill.removed {
+  opacity: 0.35;
+  filter: grayscale(1);
+  text-decoration: line-through;
+}
+.opt-pill .opt-letter {
+  font-size: 0.9rem;
+  font-weight: 900;
+  min-width: 22px;
+  height: 22px;
+  border-radius: 6px;
+  background: rgba(0,0,0,0.25);
+  display: flex; align-items: center; justify-content: center;
+  flex-shrink: 0;
+}
+
+/* ── Game Control Buttons (touch) ─────────────────── */
+.ctrl-btn {
+  width: 62px; height: 62px;
+  border-radius: 14px;
+  border: 1.5px solid rgba(255,255,255,0.2);
+  background: rgba(10,14,28,0.7);
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+  color: #fff;
+  font-size: 1.6rem;
+  cursor: pointer;
+  display: flex; align-items: center; justify-content: center;
+  box-shadow: 0 4px 16px rgba(0,0,0,0.4);
+  transition: background 0.12s, transform 0.08s;
+  -webkit-touch-callout: none;
+}
+.ctrl-btn:active { background: rgba(255,255,255,0.14); transform: scale(0.94); }
+
+/* ── Fade animation ───────────────────────────────── */
+@keyframes fadeUp {
+  from { opacity: 0; transform: translateY(16px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+.animate-fade-in { animation: fadeUp 0.32s cubic-bezier(0.22,1,0.36,1) forwards; }
+
+@keyframes pulse-glow {
+  0%, 100% { box-shadow: 0 0 0 0 rgba(245,200,66,0.0); }
+  50% { box-shadow: 0 0 28px 6px rgba(245,200,66,0.3); }
+}
+.pulse { animation: pulse-glow 2.4s ease-in-out infinite; }
+
+/* ── Screen visibility ────────────────────────────── */
+.desktop-ui { display: block; }
+.mobile-ui  { display: none; }
+
+@media (max-width: 767px) {
+  .desktop-ui { display: none !important; }
+  .mobile-ui  {
+    display: flex !important;
+    flex-direction: column;
+    justify-content: space-between;
+    padding: 10px;
+    gap: 8px;
+  }
+}

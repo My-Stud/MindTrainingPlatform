@@ -1,0 +1,57 @@
+[
+  {
+    "field1": "Which country won the ICC Cricket World Cup in 2011?",
+    "optionA": "Australia",
+    "optionB": "India",
+    "optionC": "Sri Lanka",
+    "optionD": "England",
+    "correctAnswer": "B",
+    "hint": "MS Dhoni hit the winning six in Mumbai.",
+    "difficulty": "easy",
+    "category": "Cricket"
+  },
+  {
+    "field1": "Who has scored the most runs in international cricket?",
+    "optionA": "Ricky Ponting",
+    "optionB": "Brian Lara",
+    "optionC": "Sachin Tendulkar",
+    "optionD": "Virat Kohli",
+    "correctAnswer": "C",
+    "hint": "Known as the Master Blaster.",
+    "difficulty": "easy",
+    "category": "Cricket"
+  },
+  {
+    "field1": "What is the capital city of Australia?",
+    "optionA": "Sydney",
+    "optionB": "Melbourne",
+    "optionC": "Canberra",
+    "optionD": "Brisbane",
+    "correctAnswer": "C",
+    "hint": "Planned city purpose-built as capital.",
+    "difficulty": "medium",
+    "category": "Geography"
+  },
+  {
+    "field1": "What is the capital of Japan?",
+    "optionA": "Kyoto",
+    "optionB": "Osaka",
+    "optionC": "Tokyo",
+    "optionD": "Hiroshima",
+    "correctAnswer": "C",
+    "hint": "Home to the famous Shibuya crossing.",
+    "difficulty": "easy",
+    "category": "Geography"
+  },
+  {
+    "field1": "What is 15 * 8?",
+    "optionA": "110",
+    "optionB": "120",
+    "optionC": "130",
+    "optionD": "140",
+    "correctAnswer": "B",
+    "hint": "10 * 8 = 80, 5 * 8 = 40.",
+    "difficulty": "easy",
+    "category": "Math"
+  }
+]
